@@ -1,0 +1,12 @@
+language: python
+python: '2.7'
+sudo: required
+services:
+  - docker
+script:
+  - docker build -t globalgiving/request-duplicator:latest .
+after_success:
+  - docker login -u "${DOCKER_USERNAME}" -p "${DOCKER_PASSWORD}"
+  - if [[ "${TRAVIS_BRANCH}" == "master" ]]; then
+    docker push globalgiving/request-duplicator:latest;
+    fi
