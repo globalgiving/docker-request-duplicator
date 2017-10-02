@@ -61,22 +61,14 @@ def proxy_thread(conn, client_addr):
             s.connect((backend, SERVICE_PORT))
             s.send(request)
 
-            save_data = False
+            data = s.recv(MAX_DATA_RECV)
             if response == None:
                 response = []
-                save_data = True
-
-            while 1:
-                data = s.recv(MAX_DATA_RECV)
-
-                if len(data) <= 0:
-                    break
-
-                if save_data:
-                    response.append(data)
+                response.append(data)
 
             s.close()
-        conn.send(response.join(""))
+
+        conn.send(b''.join(response))
         conn.close()
     except socket.error:
         if s:
