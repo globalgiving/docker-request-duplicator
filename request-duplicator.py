@@ -15,9 +15,9 @@ def main():
     # host and port info.
     host = ''               # blank for localhost
 
-    print "Starting up on {}:{}".format(host,8080)
+    print("Starting up on {}:{}".format(host,8080))
 
-    thread.start_new_thread(backend_updater)
+    thread.start_new_thread(backend_updater, ())
 
     try:
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -27,7 +27,7 @@ def main():
     except socket.error, (value, message):
         if s:
             s.close()
-        print "Could not open socket: {}".format(message)
+        print("Could not open socket: {}".format(message))
         sys.exit(1)
 
     while 1:
@@ -38,12 +38,12 @@ def main():
 
 def backend_updater():
     while 1:
-        print "Updating backend list"
+        print("Updating backend list")
         new_backends = []
         for service in docker_client.services.list(filters={"name":SERVICE_NAME}):
             for task in service.tasks():
                 task_name = "{}.{}-{}".format(SERVICE_NAME, task['Slot'], task['ID'])
-                print "Found service task: {}".format(task_name)
+                print("Found service task: {}".format(task_name))
                 new_backends.append(task_name)
         backends[:] = new_backends[:]
         time.sleep(60)
@@ -81,7 +81,7 @@ def proxy_thread(conn, client_addr):
             s.close()
         if conn:
             conn.close()
-        print "{}\t{}\t{}".format(client_addr[0], "Peer Reset", first_line)
+        print("{}\t{}\t{}".format(client_addr[0], "Peer Reset", first_line))
         sys.exit(1)
 
 if __name__ == '__main__':
