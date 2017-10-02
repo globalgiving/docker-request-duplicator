@@ -43,7 +43,7 @@ def backend_updater():
         print("Updating backend list")
         new_backends = []
         for service in docker_client.services.list(filters={"name":SERVICE_NAME}):
-            for task in service.tasks():
+            for task in service.tasks(filters={"desired-state":"Running"}):
                 task_name = "{}.{}.{}".format(SERVICE_NAME, task['Slot'], task['ID'])
                 print("Found service task: {}".format(task_name))
                 new_backends.append(task_name)
