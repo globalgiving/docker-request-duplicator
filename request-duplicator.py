@@ -1,4 +1,4 @@
-import os,sys,thread,socket
+import os,sys,threading,socket
 import time
 import docker
 
@@ -9,7 +9,7 @@ BLOCKED = []            # just an example. Remove with [""] for no blocking at a
 backends = []
 docker_client = docker.DockerClient(base_url='unix://var/run/docker.sock')
 SERVICE_NAME = os.environ['SERVICE_NAME']
-SERVICE_PORT = os.environ['SERVICE_PORT']
+SERVICE_PORT = int(os.environ['SERVICE_PORT'])
 
 def main():
     # host and port info.
@@ -17,22 +17,24 @@ def main():
 
     print("Starting up on {}:{}".format(host,8080))
 
-    thread.start_new_thread(backend_updater, ())
+    updater = threading.Thread(target=backend_updater)
+    updater.start()
 
     try:
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.bind((host, 8080))
         s.listen(BACKLOG)
 
-    except socket.error, (value, message):
+    except socket.error as e:
         if s:
             s.close()
-        print("Could not open socket: {}".format(message))
+        print("Could not open socket: {}".format(e))
         sys.exit(1)
 
     while 1:
         conn, client_addr = s.accept()
-        thread.start_new_thread(proxy_thread, (conn, client_addr))
+        t = threading.Thread(target=proxy_thread, args=(conn, client_addr))
+        t.start()
 
     s.close()
 
@@ -51,7 +53,7 @@ def backend_updater():
 # A thread to handle request from browser
 def proxy_thread(conn, client_addr):
     request = conn.recv(MAX_DATA_RECV)
-    response = none
+    response = None
 
     try:
         for backend in backends:
@@ -60,7 +62,7 @@ def proxy_thread(conn, client_addr):
             s.send(request)
 
             save_data = False
-            if response == none:
+            if response == None:
                 response = []
                 save_data = True
 
@@ -76,7 +78,7 @@ def proxy_thread(conn, client_addr):
             s.close()
         conn.send(response.join(""))
         conn.close()
-    except socket.error, (value, message):
+    except socket.error:
         if s:
             s.close()
         if conn:
